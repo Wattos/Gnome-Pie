@@ -90,41 +90,41 @@ public class Color: GLib.Object {
     /////////////////////////////////////////////////////////////////////
     
     public Color.from_icon(Image icon) {
-//        unowned uchar[] data = icon.surface.get_data();
-//    
-//        uint width = icon.surface.get_width();
-//        uint height = icon.surface.get_height();
-//        uint row_bytes = icon.surface.get_stride();
+        unowned uchar[] data = icon.surface.get_data();
+    
+        uint width = icon.surface.get_width();
+        uint height = icon.surface.get_height();
+        uint row_bytes = icon.surface.get_stride();
 
-//        double total = 0.0;
-//        double rtotal = 0.0;
-//        double gtotal = 0.0;
-//        double btotal = 0.0; 
+        double total = 0.0;
+        double rtotal = 0.0;
+        double gtotal = 0.0;
+        double btotal = 0.0; 
 
-//        for (uint i = 0; i < width; ++i) {
-//            for (uint j = 0; j < height; ++j) {
-//                uint pixel = j * row_bytes + i * 4;
-//                double b = data[pixel + 0]/255.0;
-//                double g = data[pixel + 1]/255.0;
-//                double r = data[pixel + 2]/255.0;
-//                double a = data[pixel + 3]/255.0;
+        for (uint i = 0; i < width; ++i) {
+            for (uint j = 0; j < height; ++j) {
+                uint pixel = j * row_bytes + i * 4;
+                double b = data[pixel + 0]/255.0;
+                double g = data[pixel + 1]/255.0;
+                double r = data[pixel + 2]/255.0;
+                double a = data[pixel + 3]/255.0;
 
-//                double saturation = (fmax (r, fmax (g, b)) - fmin (r, fmin (g, b)));
-//                double relevance = 0.1 + 0.9 * a * saturation;
+                double saturation = (fmax (r, fmax (g, b)) - fmin (r, fmin (g, b)));
+                double relevance = 0.1 + 0.9 * a * saturation;
 
-//                rtotal +=  (r * relevance);
-//                gtotal +=  (g * relevance);
-//                btotal +=  (b * relevance);
+                rtotal +=  (r * relevance);
+                gtotal +=  (g * relevance);
+                btotal +=  (b * relevance);
 
-//                total += relevance;
-//            }
-//        }
+                total += relevance;
+            }
+        }
 
-//        Color.from_rgb((float)(rtotal/total), (float)(gtotal/total), (float)(btotal/total));
+        Color.from_rgb((float)(rtotal/total), (float)(gtotal/total), (float)(btotal/total));
 
-//        if (s > 0.15f) s = 0.65f;
+        if (s > 0.15f) s = 0.65f;
 
-//        v = 1.0f;
+        v = 1.0f;
     }
     
     /////////////////////////////////////////////////////////////////////

@@ -18,23 +18,33 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace GnomePie {
 
 /////////////////////////////////////////////////////////////////////////    
-///  
+/// A class representing a square-shaped icon, themed according to the
+/// current theme of Gnome-Pie.
 /////////////////////////////////////////////////////////////////////////
 
 public class ThemedIcon : Image {
 
+    /////////////////////////////////////////////////////////////////////
+    /// A cache which stores loaded icon. The key is the icon name. When
+    /// the users icon theme or the theme of Gnome-Pie changes, these
+    /// cahces are cleared.
+    /////////////////////////////////////////////////////////////////////
+
     private static Gee.HashMap<string, Cairo.ImageSurface?> active_cache { private get; private set; }
     private static Gee.HashMap<string, Cairo.ImageSurface?> inactive_cache { private get; private set; }
-    
     
     /////////////////////////////////////////////////////////////////////
     /// Initializes the caches.
     /////////////////////////////////////////////////////////////////////
     
-    static construct {
+    public static void init() {
         clear_cache();
         
         Config.global.notify["theme"].connect(() => {
+            clear_cache();
+        });
+        
+        Gtk.IconTheme.get_default().changed.connect(() => {
             clear_cache();
         });
     }
@@ -71,7 +81,7 @@ public class ThemedIcon : Image {
             if (layer.image.width() > size) size = layer.image.width();
         }
         
-        base.empty(size, size);
+        this.surface = new Cairo.ImageSurface(Cairo.Format.ARGB32, size, size);
         
         // get size of icon layer
         int icon_size = size;
@@ -79,9 +89,10 @@ public class ThemedIcon : Image {
             if (layer.is_icon) icon_size = layer.image.width();
         }
     
-        var icon =  new Icon(icon_name, icon_size);
+        var icon = new Icon(icon_name, icon_size);
+        
         var color = new Color.from_icon(icon);
-        var ctx  =  this.context();
+        var ctx = this.context();
         
         ctx.translate(size/2, size/2);
         ctx.set_operator(Cairo.Operator.OVER);
@@ -128,6 +139,10 @@ public class ThemedIcon : Image {
         
         current_cache.set(icon_name, this.surface);
     }
+    
+    /////////////////////////////////////////////////////////////////////
+    /// Returns the size of the icon in pixels. Greetings to Liskov.
+    /////////////////////////////////////////////////////////////////////
     
     public int size() {
         return base.width();

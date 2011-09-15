@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
+using GLib.Math;
+
 namespace GnomePie {
 
 /////////////////////////////////////////////////////////////////////////    
@@ -24,8 +26,12 @@ namespace GnomePie {
 
 public class PieRenderer : GtkClutter.Embed {
 
-    public Clutter.Stage stage = null;
-    private CenterRenderer center_renderer = null;
+    private Clutter.Stage stage = null;
+    
+    private CenterRenderer center = null;
+    private Gee.ArrayList<SliceRenderer?> slices = null;
+    
+    public int size { get; private set; default = 100; }
     
     public PieRenderer() {
         this.stage = this.get_stage() as Clutter.Stage;
@@ -34,17 +40,54 @@ public class PieRenderer : GtkClutter.Embed {
         this.stage.use_alpha = true;
         this.stage.color = Clutter.Color.from_string("#0000");
         
-        this.center_renderer = new CenterRenderer();
+        this.slices = new Gee.ArrayList<SliceRenderer?>();
     }
     
     public void load_pie(Pie pie) {
         this.stage.remove_all();
-        this.center_renderer.load(this.stage);
+        this.slices.clear();
+        
+        int count = pie.action_count();
+        int position = 0;
+        
+        // default size for Pies
+        this.size = 2*(int)fmax(Config.global.theme.radius + 
+                                Config.global.theme.slice_radius*Config.global.theme.max_zoom,
+                                Config.global.theme.center_radius);
+        
+        // increase size if there are many slices
+        if (count > 0) {
+            this.size = (int)fmax(this.size,
+                (((Config.global.theme.slice_radius + Config.global.theme.slice_gap)/tan(PI/count)) 
+                 + Config.global.theme.slice_radius)*2*Config.global.theme.max_zoom);
+        }
+        
+        this.stage.set_size(size, size);
+        
+        // load all slices
+        foreach (var group in pie.action_groups) {
+            foreach (var action in group.actions) {
+                this.slices.add(new SliceRenderer(action, this.stage, position++, count));
+            }
+        }
+        
+        // load the center
+        this.center = new CenterRenderer(this.stage);
     }
     
     public void fade_in() {
         this.show();
-        this.center_renderer.fade_in();
+        this.center.fade_in();
+        
+        foreach (var slice in slices)
+            slice.fade_in();
+    }
+    
+    public void mouse_moved(double x, double y) {
+        this.center.mouse_moved(x-this.stage.width, y-this.stage.height);
+        
+        foreach (var slice in slices)
+            slice.mouse_moved(x-this.stage.width, y-this.stage.height);
     }
     
     public void activate_slice() {
@@ -52,17 +95,15 @@ public class PieRenderer : GtkClutter.Embed {
     }
     
     public void cancel() {
-        this.center_renderer.fade_out();
+        this.center.fade_out();
+        
+        foreach (var slice in slices)
+            slice.fade_out();
         
         Timeout.add((uint)(Config.global.theme.fade_out_time*1000), () => {
             this.hide();
             return false;
         });
-    }
-    
-    public int get_size() {
-        /// TODO
-        return 400;
     }
 }
 

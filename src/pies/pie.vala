@@ -31,14 +31,12 @@ public class Pie : GLib.Object {
     
     public string name {get; construct;}
     
-    
     /////////////////////////////////////////////////////////////////////
     /// The name of the icon to be used for this Pie. It should exist in
     /// the users current icon theme, else a standard icon will be used.
     /////////////////////////////////////////////////////////////////////
     
     public string icon {get; construct;}
-    
     
     /////////////////////////////////////////////////////////////////////
     /// The ID of this Pie. It has to be unique among all Pies. This ID
@@ -48,14 +46,12 @@ public class Pie : GLib.Object {
     /////////////////////////////////////////////////////////////////////
     
     public string id {get; construct;}
-    
-    
+     
     /////////////////////////////////////////////////////////////////////
     /// Stores all ActionGroups of this Pie.
     /////////////////////////////////////////////////////////////////////
     
     public Gee.ArrayList<ActionGroup?> action_groups {get; private set;}
-    
     
     /////////////////////////////////////////////////////////////////////
     /// C'tor, initializes all given members.
@@ -77,13 +73,24 @@ public class Pie : GLib.Object {
             action_group.on_remove();
     }
     
-    
     /////////////////////////////////////////////////////////////////////
     /// Adds an ActionGroup to this Pie.
     /////////////////////////////////////////////////////////////////////
     
     public void add_group(ActionGroup group) {
         this.action_groups.add(group);
+    }
+    
+    /////////////////////////////////////////////////////////////////////
+    /// Returns the number of actions in this Pie.
+    /////////////////////////////////////////////////////////////////////
+    
+    public int action_count() {
+        int result = 0;
+        foreach (var group in this.action_groups)
+            result += group.actions.size;
+                
+        return result;
     }
 }
 

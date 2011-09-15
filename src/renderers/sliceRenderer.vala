@@ -19,10 +19,58 @@ using GLib.Math;
 
 namespace GnomePie {
 
-// Renders a Slice of a Pie. According to the current theme.
+/////////////////////////////////////////////////////////////////////////    
+/// Renders a Slice of a Pie. According to the current theme.
+/////////////////////////////////////////////////////////////////////////
 
 public class SliceRenderer : GLib.Object {
-
+    
+    private Clutter.Actor active_slice = null;
+    private Clutter.Actor inactive_slice = null;
+    
+    public SliceRenderer(Action action, Clutter.Stage stage, int position, int total_slices) {
+        double direction = 2.0 * PI * (double)position/(double)total_slices;
+        double radius = Config.global.theme.radius;
+        
+        // increase radius for Pies full of slices
+        if (atan((Config.global.theme.slice_radius+Config.global.theme.slice_gap)
+                 /(radius/Config.global.theme.max_zoom)) > PI/total_slices) {
+                 
+            radius = (Config.global.theme.slice_radius+Config.global.theme.slice_gap)
+                     /tan(PI/total_slices)*Config.global.theme.max_zoom;
+        }
+        
+        var active_icon = new ThemedIcon(action.icon, true);
+            this.active_slice = active_icon.create_actor();
+            this.active_slice.set_opacity(255);
+            this.active_slice.set_position(stage.width*0.5f, stage.height*0.5f);
+            this.active_slice.set_anchor_point((float)(cos(direction)*radius) + this.active_slice.width*0.5f, 
+                                               (float)(sin(direction)*radius) + this.active_slice.height*0.5f);
+            
+            stage.add_actor(this.active_slice);
+        
+        
+        var inactive_icon = new ThemedIcon(action.icon, false);
+            this.inactive_slice = inactive_icon.create_actor();
+            this.inactive_slice.set_opacity(255);
+            this.inactive_slice.set_position(stage.width*0.5f, stage.height*0.5f);
+            this.inactive_slice.set_anchor_point((float)(cos(direction)*radius) + this.inactive_slice.width*0.5f, 
+                                                 (float)(sin(direction)*radius) + this.inactive_slice.height*0.5f);
+            
+            stage.add_actor(this.inactive_slice);
+    }
+    
+    public void fade_in() {
+        
+    }
+    
+    public void fade_out() {
+    
+    }
+    
+    public void mouse_moved(double x, double y) {
+        
+    }
 }
 
 }

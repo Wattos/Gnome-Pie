@@ -30,7 +30,6 @@ public class Image : GLib.Object {
     
     public Cairo.ImageSurface surface { public get; protected set; default=null; }
     
-    
     /////////////////////////////////////////////////////////////////////
     /// Creates an empty Image.
     /////////////////////////////////////////////////////////////////////
@@ -46,15 +45,39 @@ public class Image : GLib.Object {
     }
     
     /////////////////////////////////////////////////////////////////////
-    /// Loads an icon from the the given filename.
+    /// Creates an image from the the given filename.
     /////////////////////////////////////////////////////////////////////
     
     public Image.from_file(string filename) {
+        this.load_file(filename);
+    }
+    
+    /////////////////////////////////////////////////////////////////////
+    /// Creates an image from the the given filename at a given size.
+    /////////////////////////////////////////////////////////////////////
+    
+    public Image.from_file_at_size(string filename, int width, int height) {
+        this.load_file_at_size(filename, width, height);
+    }
+    
+    /////////////////////////////////////////////////////////////////////
+    /// Creates an image from the the given Gdk.Pixbuf.
+    /////////////////////////////////////////////////////////////////////
+    
+    public Image.from_pixbuf(Gdk.Pixbuf pixbuf) {
+        this.load_pixbuf(pixbuf);
+    }
+    
+    /////////////////////////////////////////////////////////////////////
+    /// Loads an image from the the given filename.
+    /////////////////////////////////////////////////////////////////////
+    
+    public void load_file(string filename) {
         try {
             var pixbuf = new Gdk.Pixbuf.from_file(filename);
             
             if (pixbuf != null) {
-                this.from_pixbuf(pixbuf);
+                this.load_pixbuf(pixbuf);
             } else {
                 warning("Failed to load " + filename + "!");
             }
@@ -64,15 +87,15 @@ public class Image : GLib.Object {
     }
     
     /////////////////////////////////////////////////////////////////////
-    /// Loads an icon from the the given filename at a given size.
+    /// Loads an image from the the given filename at a given size.
     /////////////////////////////////////////////////////////////////////
     
-    public Image.from_file_at_size(string filename, int width, int height) {
+    public void load_file_at_size(string filename, int width, int height) {
         try {
             var pixbuf = new Gdk.Pixbuf.from_file_at_size(filename, width, height);
             
             if (pixbuf != null) {
-                this.from_pixbuf(pixbuf);
+                this.load_pixbuf(pixbuf);
             } else {
                 warning("Failed to load " + filename + "!");
             }
@@ -82,10 +105,10 @@ public class Image : GLib.Object {
     }
     
     /////////////////////////////////////////////////////////////////////
-    /// Loads an icon from the the given Gdk.Pixbuf.
+    /// Loads an image from the the given Gdk.Pixbuf.
     /////////////////////////////////////////////////////////////////////
     
-    public Image.from_pixbuf(Gdk.Pixbuf pixbuf) {
+    public void load_pixbuf(Gdk.Pixbuf pixbuf) {
         this.surface = new Cairo.ImageSurface(Cairo.Format.ARGB32, pixbuf.width, pixbuf.height);
     
         var ctx = this.context();
@@ -104,20 +127,32 @@ public class Image : GLib.Object {
     }
     
     /////////////////////////////////////////////////////////////////////
-    /// 
+    /// Returns a Cairo.Context for the Image.
     /////////////////////////////////////////////////////////////////////
     
     public Cairo.Context context() {
         return new Cairo.Context(this.surface);;
     }
     
+    /////////////////////////////////////////////////////////////////////
+    /// Returns the width of the image in pixels.
+    /////////////////////////////////////////////////////////////////////
+    
     public int width() {
         return this.surface.get_width();
     }
     
+    /////////////////////////////////////////////////////////////////////
+    /// Returns the height of the image in pixels.
+    /////////////////////////////////////////////////////////////////////
+    
     public int height() {
         return this.surface.get_height();
     }
+    
+    /////////////////////////////////////////////////////////////////////
+    /// Creates a Clutter.Texture for this image.
+    /////////////////////////////////////////////////////////////////////
     
     public Clutter.CairoTexture create_actor() {
         var result = new Clutter.CairoTexture(this.width(), this.height());

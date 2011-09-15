@@ -18,24 +18,24 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace GnomePie {
 
 /////////////////////////////////////////////////////////////////////////    
-///  
+///  A class representing a square-shaped icon, loaded from the users
+/// icon theme.
 /////////////////////////////////////////////////////////////////////////
 
 public class Icon : Image {
 
     /////////////////////////////////////////////////////////////////////
-    /// A cache which stores images loaded from files. The key is in form
-    /// <filename>@<size>
+    /// A cache which stores loaded icon. It is cleared when the icon
+    /// theme of the user changes. The key is in form <filename>@<size>.
     /////////////////////////////////////////////////////////////////////
 
     private static Gee.HashMap<string, Cairo.ImageSurface?> cache { private get; private set; }
-    
     
     /////////////////////////////////////////////////////////////////////
     /// Initializes the cache.
     /////////////////////////////////////////////////////////////////////
     
-    static construct {
+    public static void init() {
         clear_cache();
         
         Gtk.IconTheme.get_default().changed.connect(() => {
@@ -59,12 +59,16 @@ public class Icon : Image {
         var cached = this.cache.get("%s@%u".printf(icon_name, size));
         
         if (cached == null) {
-            base.from_file_at_size(this.get_icon_file(icon_name, size), size, size);
+            this.load_file_at_size(this.get_icon_file(icon_name, size), size, size);
             this.cache.set("%s@%u".printf(icon_name, size), this.surface);
         } else {
             this.surface = cached;
         }
     }
+    
+    /////////////////////////////////////////////////////////////////////
+    /// Returns the size of the icon in pixels. Greetings to Liskov.
+    /////////////////////////////////////////////////////////////////////
     
     public int size() {
         return base.width();
@@ -74,7 +78,7 @@ public class Icon : Image {
     /// Returns the filename for a given system icon.
     /////////////////////////////////////////////////////////////////////
     
-    private string get_icon_file(string icon_name, int size) {
+    private static string get_icon_file(string icon_name, int size) {
         string result = "";
     
         if (!icon_name.contains("/")) {

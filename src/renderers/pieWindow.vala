@@ -82,6 +82,12 @@ public class PieWindow : Gtk.Window {
             return true;
         });
         
+        // connect pointer movement
+        this.motion_notify_event.connect((e) => {
+            this.renderer.mouse_moved((double)e.x, (double)e.y);
+            return true;
+        });
+        
         // hide this window when the PieRenderer is hidden
         this.renderer.hide.connect(() => {
             GLib.Timeout.add((uint)(Config.global.theme.fade_out_time*1000), () => {
@@ -106,7 +112,7 @@ public class PieWindow : Gtk.Window {
 
     public void load_pie(Pie pie) {
         this.renderer.load_pie(pie);
-        this.set_size_request(this.renderer.get_size(), this.renderer.get_size());
+        this.set_size_request(this.renderer.size, this.renderer.size);
     }
 
     /////////////////////////////////////////////////////////////////////
