@@ -62,7 +62,14 @@ public class Deamon : GLib.Application {
                              flags : GLib.ApplicationFlags.HANDLES_COMMAND_LINE);
         // init gtk
         Gtk.init(ref args);
-
+        
+        // init clutter
+        Clutter.X11.set_use_argb_visual(true);
+        if (GtkClutter.init(ref args) != Clutter.InitError.SUCCESS)
+            warning("An error occured while initializing GtkClutter!");
+        if (Clutter.init(ref args) != Clutter.InitError.SUCCESS)
+            warning("An error occured while initializing Clutter!");
+        
         this.command_line.connect(this.start);
     }
     
@@ -82,7 +89,7 @@ public class Deamon : GLib.Application {
 		
 		    // finished loading... so run the prog!
 		    message("Started happily...");
-		    Gtk.main();
+		    Clutter.main();
 		} else {
 		     this.evaluate_commandline(line, false);
 		}
@@ -95,18 +102,20 @@ public class Deamon : GLib.Application {
     /////////////////////////////////////////////////////////////////////
     
     private void init() {
-        // init toolkits and static stuff
-        Logger.init();
-        Paths.init();
+        // init threads
         Gdk.threads_init();
-        ActionRegistry.init();
-        GroupRegistry.init();
-        PieManager.init();
-    
+        
         // init locale support
         Intl.bindtextdomain ("gnomepie", Paths.locales);
         Intl.textdomain ("gnomepie");
         
+        // init static stuff
+        Logger.init();
+        Paths.init();
+        ActionRegistry.init();
+        GroupRegistry.init();
+        PieManager.init();
+    
         // launch the indicator
         this.indicator = new Indicator();
 
@@ -140,7 +149,7 @@ public class Deamon : GLib.Application {
     private static void sig_handler(int sig) {
         stdout.printf("\n");
 		message("Caught signal (%d), bye!".printf(sig));
-		Gtk.main_quit();
+		Clutter.main_quit();
 	}
 }
 

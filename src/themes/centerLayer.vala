@@ -29,19 +29,17 @@ public class CenterLayer : GLib.Object {
     public string image_file;
     private int center_radius;
     
-    public double active_scale                 {get; private set;}
-    public double active_rotation_speed        {get; private set;}
-    public double active_alpha                 {get; private set;}
-    public bool   active_colorize              {get; private set;}
-    public RotationMode active_rotation_mode   {get; private set;}
+    public double active_scale {get; private set;}
+    public double active_rotation_speed {get; private set;}
+    public double active_alpha {get; private set;}
+    public bool active_colorize {get; private set;}
+    public RotationMode active_rotation_mode {get; private set;}
     
-    public double inactive_scale               {get; private set;}
-    public double inactive_rotation_speed      {get; private set;}
-    public double inactive_alpha               {get; private set;}
-    public bool   inactive_colorize            {get; private set;}
+    public double inactive_scale {get; private set;}
+    public double inactive_rotation_speed {get; private set;}
+    public double inactive_alpha {get; private set;}
+    public bool inactive_colorize {get; private set;}
     public RotationMode inactive_rotation_mode {get; private set;}
-    
-    public double rotation {get; set;}
         
     public CenterLayer(string image_file, int center_radius, double active_scale, double active_rotation_speed,   
                                     double active_alpha,   bool active_colorize,   RotationMode active_rotation_mode,
@@ -62,12 +60,10 @@ public class CenterLayer : GLib.Object {
         this.inactive_alpha = inactive_alpha;
         this.inactive_colorize = inactive_colorize;
         this.inactive_rotation_mode = inactive_rotation_mode;
-        
-        this.rotation = 0.0;
     }
     
     public void load_image() {
-        this.image = new Image.from_file(image_file, 2*center_radius);
+        this.image = new Image.from_file_at_size(image_file, 2*center_radius, 2*center_radius);
     }
 }
 

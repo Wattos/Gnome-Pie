@@ -31,6 +31,8 @@ public class PieManager : GLib.Object {
 
     public static Gee.HashMap<string, Pie?> all_pies { get; private set; }
     
+    private static Gee.ArrayList<PieWindow?> windows = null;
+    
     
     /////////////////////////////////////////////////////////////////////
     /// Stores all global hotkeys.
@@ -45,6 +47,7 @@ public class PieManager : GLib.Object {
     
     public static void init() {
         all_pies = new Gee.HashMap<string, Pie?>();
+        windows = new Gee.ArrayList<PieWindow?>();
         bindings = new BindingManager();
         
         // load all Pies from th pies.conf file
@@ -64,9 +67,19 @@ public class PieManager : GLib.Object {
         Pie? pie = all_pies[id];
         
         if (pie != null) {
+            foreach (var window in windows) {
+                if (!window.visible) {
+                    window.load_pie(pie);
+                    window.open();
+                    return;
+                }
+            }
+            
             var window = new PieWindow();
             window.load_pie(pie);
             window.open();
+            windows.add(window);
+            
         } else {
             warning("Failed to open pie with ID \"" + id + "\": ID does not exist!");
         }

@@ -23,123 +23,62 @@ namespace GnomePie {
 
 public class CenterRenderer : GLib.Object {
 
-    private unowned PieRenderer parent;
-    private unowned Image? caption;
-    private Color color;
-    
-    private AnimatedValue activity;
-    private AnimatedValue alpha;
+    private Gee.ArrayList<Clutter.Actor?> layers = null;
+    private Clutter.Animator anim = null;
 
-    public CenterRenderer(PieRenderer parent) {
-        this.parent = parent;
-        this.activity = new AnimatedValue.linear(0.0, 0.0, Config.global.theme.transition_time);
-        this.alpha = new AnimatedValue.linear(0.0, 1.0, Config.global.theme.fade_in_time);
-        this.color = new Color();
-        this.caption = null;
+    public void load(Clutter.Stage stage) {
+        this.layers = new Gee.ArrayList<Clutter.Actor?>();
+    
+        foreach(var layer in Config.global.theme.center_layers) {
+            var actor = layer.image.create_actor();
+
+            actor.set_position((stage.width)*0.5f, (stage.height)*0.5f);
+            actor.set_anchor_point(actor.width*0.5f, actor.height*0.5f);
+            actor.opacity = 0;
+            actor.scale_y = 0.5f;
+            actor.scale_x = 0.5f;
+                
+            stage.add_actor(actor);
+            layers.add(actor);
+        }
+    }
+    
+    public void fade_in() {
+    
+        this.anim = new Clutter.Animator();
+        this.anim.duration = (uint)(Config.global.theme.fade_in_time*2000);
+    
+        for(int i = 0; i<layers.size; ++i) {
+            this.anim.set_key(layers[i], "opacity", Clutter.AnimationMode.LINEAR, 0.0, (uint)0);
+            this.anim.set_key(layers[i], "scale_x", Clutter.AnimationMode.LINEAR, 0.0, (double)0.5);
+            this.anim.set_key(layers[i], "scale_y", Clutter.AnimationMode.LINEAR, 0.0, (double)0.5);
+            
+            this.anim.set_key(layers[i], "opacity", Clutter.AnimationMode.EASE_OUT_CUBIC, 1.0, (uint)255);
+            this.anim.set_key(layers[i], "scale_x", Clutter.AnimationMode.EASE_OUT_ELASTIC, 1.0, (double)1.0);
+            this.anim.set_key(layers[i], "scale_y", Clutter.AnimationMode.EASE_OUT_ELASTIC, 1.0, (double)1.0);
+        }
+        
+        this.anim.start();
+        
     }
     
     public void fade_out() {
-        this.activity.reset_target(0.0, Config.global.theme.fade_out_time);
-        this.alpha.reset_target(0.0, Config.global.theme.fade_out_time);
-    }
     
-    public void set_active_slice(SliceRenderer? active_slice) {
-        if (active_slice == null) {
-            this.activity.reset_target(0.0, Config.global.theme.transition_time);
-        } else {
-            this.activity.reset_target(1.0, Config.global.theme.transition_time);
-            this.caption = active_slice.caption;
-            this.color   = active_slice.color;
-        }
-    }
+        this.anim = new Clutter.Animator();
+        this.anim.duration = (uint)(Config.global.theme.fade_out_time*2000);
     
-    public void draw(double frame_time, Cairo.Context ctx, double angle, double distance) {
-
-	    var layers = Config.global.theme.center_layers;
-        
-        this.activity.update(frame_time);
-        this.alpha.update(frame_time);
-	
-	    foreach (var layer in layers) {
-	    
-	        ctx.save();
-
-            double active_speed = (layer.active_rotation_mode == CenterLayer.RotationMode.TO_MOUSE) ? 
-                0.0 : layer.active_rotation_speed;
-            double inactive_speed = (layer.inactive_rotation_mode == CenterLayer.RotationMode.TO_MOUSE) ? 
-                0.0 : layer.inactive_rotation_speed;
-	        double max_scale = layer.active_scale*this.activity.val 
-	            + layer.inactive_scale*(1.0-this.activity.val);
-            double max_alpha = layer.active_alpha*this.activity.val 
-                + layer.inactive_alpha*(1.0-this.activity.val);
-            double colorize = ((layer.active_colorize == true) ? this.activity.val : 0.0) 
-                + ((layer.inactive_colorize == true) ? 1.0 - this.activity.val : 0.0);
-            double max_rotation_speed = active_speed*this.activity.val 
-                + inactive_speed*(1.0-this.activity.val);
-            CenterLayer.RotationMode rotation_mode = ((this.activity.val > 0.5) ? 
-                layer.active_rotation_mode : layer.inactive_rotation_mode);
-	        
-	        if (rotation_mode == CenterLayer.RotationMode.TO_MOUSE) {
-	            double diff = angle-layer.rotation;
-	            max_rotation_speed = layer.active_rotation_speed*this.activity.val 
-	                + layer.inactive_rotation_speed*(1.0-this.activity.val);
-	            double smoothy = fabs(diff) < 0.9 ? fabs(diff) + 0.1 : 1.0; 
-	            double step = max_rotation_speed*frame_time*smoothy;
-	            
-                if (fabs(diff) <= step || fabs(diff) >= 2.0*PI - step)
-		            layer.rotation = angle;
-	            else {
-	                if ((diff > 0 && diff < PI) || diff < -PI) layer.rotation += step;
-		            else            		                   layer.rotation -= step;
-                }
-                
-	        } else if (rotation_mode == CenterLayer.RotationMode.TO_ACTIVE) {
-	            max_rotation_speed *= this.activity.val;
-	            
-	            double slice_angle = parent.slice_count() > 0 ? 2*PI/parent.slice_count() : 0;
-	            double direction = (int)((angle+0.5*slice_angle) / (slice_angle))*slice_angle;
-	            double diff = direction-layer.rotation;
-	            double step = max_rotation_speed*frame_time;
-	            
-                if (fabs(diff) <= step || fabs(diff) >= 2.0*PI - step)
-		            layer.rotation = direction;
-	            else {
-	                if ((diff > 0 && diff < PI) || diff < -PI) layer.rotation += step;
-		            else            		                   layer.rotation -= step;
-                }
-	            
-	        } else layer.rotation += max_rotation_speed*frame_time;
-	        
-	        layer.rotation = fmod(layer.rotation+2*PI, 2*PI);
-	        
-	        if (colorize > 0.0) ctx.push_group();
-	        
-	        ctx.rotate(layer.rotation);
-	        ctx.scale(max_scale, max_scale);
-	        layer.image.paint_on(ctx, this.alpha.val*max_alpha);
+        for(int i = 0; i<layers.size; ++i) {
+            this.anim.set_key(layers[i], "opacity", Clutter.AnimationMode.LINEAR, 0.0, (uint)255);
+            this.anim.set_key(layers[i], "scale_x", Clutter.AnimationMode.LINEAR, 0.0, (double)1.0);
+            this.anim.set_key(layers[i], "scale_y", Clutter.AnimationMode.LINEAR, 0.0, (double)1.0);
             
-            if (colorize > 0.0) {
-                ctx.set_operator(Cairo.Operator.ATOP);
-                ctx.set_source_rgb(this.color.r, this.color.g, this.color.b);
-                ctx.paint_with_alpha(colorize);
-                
-                ctx.set_operator(Cairo.Operator.OVER);
-                ctx.pop_group_to_source();
-	            ctx.paint();
-	        }
-            
-            ctx.restore();
+            this.anim.set_key(layers[i], "opacity", Clutter.AnimationMode.EASE_OUT_CUBIC, 1.0, (uint)0);
+            this.anim.set_key(layers[i], "scale_x", Clutter.AnimationMode.EASE_IN_ELASTIC, 1.0, (double)0.5);
+            this.anim.set_key(layers[i], "scale_y", Clutter.AnimationMode.EASE_IN_ELASTIC, 1.0, (double)0.5);
         }
         
-        // draw caption
-        if (Config.global.theme.caption && caption != null && this.activity.val > 0) {
-		    ctx.save();
-            ctx.identity_matrix();
-            int pos = this.parent.get_size()/2;
-            ctx.translate(pos, (int)(Config.global.theme.caption_position) + pos);
-            caption.paint_on(ctx, this.activity.val*this.alpha.val);
-            ctx.restore();
-        }
+        this.anim.start();
+        
     }
 }
 

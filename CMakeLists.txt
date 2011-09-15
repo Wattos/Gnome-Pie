@@ -32,14 +32,15 @@ pkg_check_modules(INDICATOR REQUIRED appindicator-0.1)
 pkg_check_modules(XML REQUIRED libxml-2.0)
 pkg_check_modules(XTST REQUIRED xtst)
 pkg_check_modules(GMENU REQUIRED libgnome-menu)
+pkg_check_modules(CLUTTER REQUIRED clutter-1.0)
+pkg_check_modules(CLUTTER_GTK REQUIRED clutter-gtk-0.10)
 
 set(CFLAGS
 	${GTK_CFLAGS} ${GTK_CFLAGS_OTHER}
 	${CAIRO_CFLAGS} ${CAIRO_CFLAGS_OTHER}
 	${GEE_CFLAGS} ${CAIRO_CFLAGS_OTHER}
-	#for gnome-menu
+	${CLUTTER_CFLAGS} ${CLUTTER_CFLAGS_OTHER}
 	-DGMENU_I_KNOW_THIS_IS_UNSTABLE
-    # for gettext
     -DGETTEXT_PACKAGE="gnomepie"
 	-O3 -s
 #    -g
@@ -54,6 +55,8 @@ set(LIBS
 	${XML_LIBRARIES}
 	${XTST_LIBRARIES}
 	${GMENU_LIBRARIES}
+	${CLUTTER_LIBRARIES}
+	${CLUTTER_GTK_LIBRARIES}
 )
 link_libraries(${LIBS})
 
@@ -65,6 +68,8 @@ set(LIB_PATHS
 	${XML_LIBRARY_DIRS}
 	${XTST_LIBRARY_DIRS}
 	${GMENU_LIBRARY_DIRS}
+	${CLUTTER_LIBRARY_DIRS}
+	${CLUTTER_GTK_LIBRARY_DIRS}
 )
 link_directories(${LIB_PATHS})
 
@@ -76,6 +81,8 @@ set(INCLUDE_PATHS
 	${XML_INCLUDE_DIRS}
 	${XTST_INCLUDE_DIRS}
 	${GMENU_INCLUDE_DIRS}
+	${CLUTTER_INCLUDE_DIRS}
+	${CLUTTER_GTK_INCLUDE_DIRS}
 )
 include_directories(${INCLUDE_PATHS})
 
@@ -88,7 +95,7 @@ set(EXECUTABLE_OUTPUT_PATH ${gnomepie_SOURCE_DIR})
 add_subdirectory(src)
 
 ################################################################
-# Summary
+# Print a summary
 ################################################################
 
 message( "" )
@@ -103,4 +110,6 @@ message( "  INDICATOR_LIBRARIES = ${INDICATOR_LIBRARIES}" )
 message( "  XML_LIBRARIES = ${XML_LIBRARIES}" )
 message( "  XTST_LIBRARIES = ${XTST_LIBRARIES}" )
 message( "  GMENU_LIBRARIES = ${GMENU_LIBRARIES}" )
+message( "  CLUTTER_LIBRARIES = ${CLUTTER_LIBRARIES}" )
+message( "  CLUTTER_GTK_LIBRARIES = ${CLUTTER_GTK_LIBRARIES}" )
 message( "" )

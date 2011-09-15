@@ -12,8 +12,8 @@ It is inspired by the an addon written for the game World of Warcraft.
 #                   About this Branch                              #
 ####################################################################
 
-This is the master Branch of Gnome-Pie. A recent "stable" version 
-will be in here.
+This is an attempt to re-write the rendering part of Gnome-Pie 
+using clutter.
 
 ####################################################################
 #                           PPA                                    #

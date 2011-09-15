@@ -22,6 +22,9 @@ vala_precompile(
         libxml-2.0
         xtst
         libgnome-menu
+        clutter-1.0
+        clutter-gtk-0.10
+        clutter-x11
     OPTIONS
         --vapidir=${CMAKE_SOURCE_DIR}/vapi/
         --thread

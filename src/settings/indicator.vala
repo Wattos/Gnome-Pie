@@ -72,7 +72,10 @@ public class Indicator : GLib.Object {
         menu.append(sepa);
 
         item = new Gtk.ImageMenuItem.from_stock(Gtk.Stock.QUIT, null);
-        item.activate.connect(Gtk.main_quit);
+        item.activate.connect(() => {
+            message("Quit requested, bye!");
+            Clutter.main_quit();
+        });
         item.show();
         menu.append(item);
 
