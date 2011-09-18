@@ -47,7 +47,7 @@ public class CenterRenderer : GLib.Object {
     public void fade_in() {
     
         this.anim = new Clutter.Animator();
-        this.anim.duration = (uint)(Config.global.theme.fade_in_time*5000);
+        this.anim.duration = (uint)(Config.global.theme.fade_in_time*1000);
         
         this.anim2 = new Clutter.Animator();
         var timeline = new Clutter.Timeline(3000);

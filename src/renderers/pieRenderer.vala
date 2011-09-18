@@ -26,7 +26,12 @@ namespace GnomePie {
 
 public class PieRenderer : GtkClutter.Embed {
 
-    private Clutter.Stage stage = null;
+    public SliceRenderer active_action { get; private set; default=null; }
+    public SliceRenderer quick_action { get; private set; default=null; }
+    
+    public int slice_count { get; private set; default=0; }
+
+    public Clutter.Stage stage { get; private set; default=null; }
     
     private CenterRenderer center = null;
     private Gee.ArrayList<SliceRenderer?> slices = null;
@@ -44,10 +49,13 @@ public class PieRenderer : GtkClutter.Embed {
     }
     
     public void load_pie(Pie pie) {
+        // unload previously loaded Pie
         this.stage.remove_all();
         this.slices.clear();
+        this.active_action = null;      
+        this.quick_action = null;
+        this.slice_count = pie.action_count();
         
-        int count = pie.action_count();
         int position = 0;
         
         // default size for Pies
@@ -55,10 +63,10 @@ public class PieRenderer : GtkClutter.Embed {
                                 Config.global.theme.slice_radius*Config.global.theme.max_zoom,
                                 Config.global.theme.center_radius);
         
-        // increase size if there are many slices
-        if (count > 0) {
+        // increase size if there are too many slices
+        if (this.slice_count > 0) {
             this.size = (int)fmax(this.size,
-                (((Config.global.theme.slice_radius + Config.global.theme.slice_gap)/tan(PI/count)) 
+                (((Config.global.theme.slice_radius + Config.global.theme.slice_gap)/tan(PI/this.slice_count)) 
                  + Config.global.theme.slice_radius)*2*Config.global.theme.max_zoom);
         }
         
@@ -67,7 +75,14 @@ public class PieRenderer : GtkClutter.Embed {
         // load all slices
         foreach (var group in pie.action_groups) {
             foreach (var action in group.actions) {
-                this.slices.add(new SliceRenderer(action, this.stage, position++, count));
+                var new_slice = new SliceRenderer(action, this, position++);
+            
+                if (action.is_quick_action) {
+                    this.quick_action = new_slice;
+                    this.active_action = new_slice;
+                }
+
+                this.slices.add(new_slice);
             }
         }
         
@@ -84,13 +99,26 @@ public class PieRenderer : GtkClutter.Embed {
     }
     
     public void mouse_moved(double x, double y) {
-        this.center.mouse_moved(x-this.stage.width, y-this.stage.height);
+        this.center.mouse_moved(x-this.stage.width*0.5, y-this.stage.height*0.5);
         
-        foreach (var slice in slices)
-            slice.mouse_moved(x-this.stage.width, y-this.stage.height);
+        bool no_active_slice = true;
+        
+        foreach (var slice in slices) {
+            if (slice.mouse_moved(x-this.stage.width*0.5, y-this.stage.height*0.5)) {
+                this.active_action = slice;
+                no_active_slice = false;
+            }
+        }
+        
+        if (no_active_slice)
+            this.active_action = this.quick_action;
     }
     
     public void activate_slice() {
+        if (this.active_action != null)
+            this.active_action.action.activate();
+        else if (this.quick_action != null)
+            this.quick_action.action.activate();
         this.cancel();
     }
     
@@ -101,6 +129,7 @@ public class PieRenderer : GtkClutter.Embed {
             slice.fade_out();
         
         Timeout.add((uint)(Config.global.theme.fade_out_time*1000), () => {
+            this.stage.remove_all();
             this.hide();
             return false;
         });
